@@ -1,0 +1,48 @@
+#%RAML 0.8
+---
+title: Log SMS API
+
+baseUri: http://localhost:8080/{version}
+version: v1
+/salesforce/log/sms:
+ post:
+    body:
+      application/json:
+        schema: |
+          {
+          "type": "object",
+          "$schema": "http://json-schema.org/draft-03/schema",
+          "properties": {
+             "LogSMSRequest": {
+              "type":"object",
+              "required":true,
+              "properties": {
+                "whoId": {
+                  "type": "string",
+                  "required": true
+                 },           
+                 "occuredAt": {
+                    "type": "string",
+                    "required": true
+                 },
+                 "text": {
+                    "type": "string",
+                    "required": true
+                 }
+              }
+          }          
+          }
+          }
+        example: |
+          {"LogSMSRequest" : {"whoId" : "xxxxxxxxxxxxxxxxxxxxxx", "occuredAt": "October 12, 2015 at 08:05PM", "text": "Kindly reminder that yoour appointment is scheduled foor this Monday"}}
+    responses:
+      200:
+       body:
+        application/json:
+         example: |
+          { "message": "00Q61000004CCSbEAO" }
+      500:
+       body:
+        application/json:
+         example: |
+          { "exception": {"code":"INVALID_OPERATION_WITH_EXPIRED_PASSWORD", "message": "The users password has expired, you must call SetPassword before attempting any other API operations" }}    

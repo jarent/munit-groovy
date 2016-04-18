@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+	<context:property-placeholder location="mule-app.properties"/>
+	
+	<sfdc:config name="Salesforce__Basic_authentication" username="${sf.username}" password="${sf.password}" securityToken="${sf.securityToken}" doc:name="Salesforce: Basic authentication"/>
+
+    <http:listener-config name="log-sms-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <apikit:config name="log-sms-config" raml="log-sms.raml" consoleEnabled="true" consolePath="console" doc:name="Router"/>
+    <flow name="log-sms-main">
+        <http:listener config-ref="log-sms-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
+        <apikit:router config-ref="log-sms-config" doc:name="APIkit Router"/>
+        <exception-strategy ref="log-sms-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <flow name="post:/salesforce/log/sms:application/json:log-sms-config">
+    	<json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object" />    	  
+        <set-payload value="#[[['Subject': 'SMS', 'Status': 'Completed', 'WhoId': payload.LogSMSRequest.whoId, 'Description': payload.LogSMSRequest.text]]]" doc:name="Create Salesforce Task"/>        
+    	 <sfdc:create config-ref="Salesforce__Basic_authentication" type="Task" doc:name="Save Task in Salesforce" >
+            <sfdc:objects ref="#[payload]"/>
+        </sfdc:create>
+        <choice doc:name="Check if save result got errors"> 
+        	<when expression="#[payload[0].errors.size() > 0]">
+        		<set-payload value="Failed because of #[payload[0].errors[0].message]" doc:name="Failure"/>        		                   		                                                              
+        		<set-property propertyName="http.status" value="500" doc:name="Set http.status to 500"/>
+            </when>
+            <otherwise>
+                <set-payload value="Added #[payload[0].id]" doc:name="Success"/>
+                <set-property propertyName="http.status" value="200" doc:name="Set http.status to 200"/>
+            </otherwise>            
+        </choice>   
+        <set-payload value="{ &quot;message&quot;: &quot;#[payload]&quot; }" doc:name="Set response"/>
+        <set-property propertyName="Content-Type" value="application/json" doc:name="Set response content-type"/>
+    </flow>
+    <apikit:mapping-exception-strategy name="log-sms-apiKitGlobalExceptionMapping">
+        <apikit:mapping statusCode="404">
+            <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;exception&quot; : {&quot;code&quot;: &quot;INVALID_REQUEST&quot;, &quot;message&quot;: &quot;Resource not found&quot; }} " doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="405">
+            <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;exception&quot; : {&quot;code&quot;: &quot;INVALID_REQUEST&quot;, &quot;message&quot;: &quot;Method not allowed&quot; }}" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="415">
+            <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;exception&quot; : {&quot;code&quot;: &quot;INVALID_REQUEST&quot;, &quot;message&quot;: &quot;Unsupported media type&quot; }}" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="406">
+            <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;exception&quot; : {&quot;code&quot;: &quot;INVALID_REQUEST&quot;, &quot;message&quot;: &quot;Not acceptable&quot;  }}" doc:name="Set Payload"/>
+        </apikit:mapping>
+        <apikit:mapping statusCode="400">
+            <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
+            <set-payload value="{ &quot;exception&quot; : {&quot;code&quot;: &quot;INVALID_REQUEST&quot;, &quot;message&quot;: &quot;Bad request&quot; }}" doc:name="Set Payload"/>
+        </apikit:mapping>
+         <apikit:mapping statusCode="500">
+            <apikit:exception value="org.mule.modules.salesforce.exception.SalesforceException" />
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>            
+            <set-payload value="{ &quot;exception&quot; : {&quot;code&quot;: &quot;#[exception.getCauseException().getExceptionCode()]&quot;, &quot;message&quot;: &quot;#[exception.getCauseException().getExceptionMessage()]&quot; }}" doc:name="Set Payload"/>
+        </apikit:mapping>
+    </apikit:mapping-exception-strategy>
+</mule>
