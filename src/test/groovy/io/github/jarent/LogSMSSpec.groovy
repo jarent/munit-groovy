@@ -3,17 +3,21 @@ package io.github.jarent
 import com.sforce.soap.partner.fault.UnexpectedErrorFault
 import groovy.json.JsonSlurper
 import groovy.text.Template
+
 import org.junit.Test;
 import org.mule.api.MuleMessage;
 import org.mule.api.client.OperationOptions
 import org.mule.munit.runner.functional.FunctionalMunitSuite
 import org.mule.module.http.api.client.HttpRequestOptionsBuilder
 import org.mule.modules.salesforce.exception.SalesforceException
+import io.github.jarent.munit.MunitSpecification
 import com.sforce.soap.partner.fault.ExceptionCode
 
-class LogSMSTest extends FunctionalMunitSuite   {
-	
-	
+import spock.lang.*
+
+@Title("Log SMS API Specification")
+class LogSMSSpec extends MunitSpecification {
+
 	@Override
 	protected String getConfigResources() {
 		
@@ -21,7 +25,6 @@ class LogSMSTest extends FunctionalMunitSuite   {
 					].join(",")
 	}
 	
-
 	@Override
 	protected boolean haveToDisableInboundEndpoints() {
 		return false;
@@ -32,54 +35,46 @@ class LogSMSTest extends FunctionalMunitSuite   {
 		return false;
 	}
 	
-	@Test
-	public void shouldRejectInvalidRequest() {
-		
-		//when											
-		MuleMessage result = send '{"phone":"6309999999"}'
-		
-		//then
-		assert result.getInboundProperty('http.status') == 400
-		assert result.getPayloadAsString() == '{ "exception" : {"code": "INVALID_REQUEST", "message": "Bad request" }}'		
-	}
+	private static final String INVALID_REQUEST = '{"phone":"6309999999"}'
 	
-	@Test
-	public void shouldFailWhenInvalidWhoId() {
-		
-		//given
-		//template and multiline strings
-		
-		Template requestTemplate = new groovy.text.SimpleTemplateEngine().createTemplate('''
+	private static final String VALID_REQUEST = '''
 			 {"LogSMSRequest" :	
 				{
 				"occuredAt": "October 12, 2015 at 08:05PM", 
-				"whoId": "${whoId}", 
+				"whoId": "00000", 
 				"text":"Hello World!"
 				}
 		     }
-			''')
+			'''	
+
+@Unroll
+def "should #scenario"() {
 		
-		//when
-		MuleMessage result = send requestTemplate.make([whoId: "00000"]).toString() 
-		
-		//then
-		assert result.getInboundProperty('http.status') == 500
-		assert result.getPayloadAsString() == '{ "message": "Failed because of Name ID: id value of incorrect type: 00000" }'
-	}
+	expect: "'#responseHttpStatus' http.status response code and #responseMessage as a result"
 	
-	@Test
-	public void shouldFailWhenSalesforceFault() {
+	MuleMessage result = send request
+	result.getInboundProperty('http.status') == responseHttpStatus
+	result.getPayloadAsString() == responseMessage
+	
+	where: "request is #request"
+	
+			scenario 			|	 request      | responseHttpStatus | responseMessage
+	'Reject Invalid Request'    | INVALID_REQUEST |    400			  | '{ "exception" : {"code": "INVALID_REQUEST", "message": "Bad request" }}'
+	'Fail When Invalid WhoId'   | VALID_REQUEST   |    500			  | '{ "message": "Failed because of Name ID: id value of incorrect type: 00000" }'	
+}
+	
+	
+	def "should Fail When Salesforce Fault"() {
 		
-		//given		
-		UnexpectedErrorFault error = new UnexpectedErrorFault()			
+		given: "Exception thrown from Saleforce create call"
+		UnexpectedErrorFault error = new UnexpectedErrorFault()
 		error.setExceptionMessage('Some except')
-		error.setExceptionCode(ExceptionCode.INVALID_OPERATION_WITH_EXPIRED_PASSWORD)							
-		
-		//when
+		error.setExceptionCode(ExceptionCode.INVALID_OPERATION_WITH_EXPIRED_PASSWORD)
 		
 		whenMessageProcessor("create").ofNamespace("sfdc").
 		withAttributes(['doc:name': 'Save Task in Salesforce']).thenThrow(new SalesforceException(error))
 		
+		when: "Valid request is sent"
 		MuleMessage result = send '''
 			 {"LogSMSRequest" :	
 				{
@@ -90,50 +85,53 @@ class LogSMSTest extends FunctionalMunitSuite   {
 		     }
 			'''		
 		
-		//then			
+		then: "Expect 500 Internal Server Error status code"
 		assert result.getInboundProperty('http.status') == 500
 		
 		def json = new JsonSlurper().parseText(result.getPayloadAsString())
 		
+		and: "Salesforce exception code"
 		json.exception.code == error.getExceptionCode().toString()
-		json.exception.message == error.getExceptionMessage()	
+		
+		and: "Salesforce exception message returned in the response"
+		json.exception.message == error.getExceptionMessage()
 		
 	}
 	
-	
-	@Test
-	public void shouldSuccessForValidRequest() {
-
-		//given
-		def newTaskId = 'newTaskId'
+	def "should Success For Valid Request"() {
 		
-		//JSON Builder sample
-		def requestBuilder = new groovy.json.JsonBuilder()		
+		given: "'newTaskId' returned from SalesForce create call"
+		
+		def newTaskId = 'newTaskId'
+		whenMessageProcessor("create").ofNamespace("sfdc").
+		withAttributes(['doc:name': 'Save Task in Salesforce']).thenReturn(muleMessageWithPayload(
+					//inline map
+					[[id:newTaskId,
+					  errors:[]
+					]]
+					))
+		
+		and: "Valid request"
+		def requestBuilder = new groovy.json.JsonBuilder()
 		requestBuilder.LogSMSRequest {
 				occuredAt "October 12, 2015 at 08:05PM"
 				whoId "validId"
 				text "Hello World!"
-			}						
-		//when
+			}
 		
-		whenMessageProcessor("create").ofNamespace("sfdc").
-		withAttributes(['doc:name': 'Save Task in Salesforce']).thenReturn(muleMessageWithPayload(
-					//inline map
-					[[id:newTaskId, 
-					  errors:[]
-					]]
-					))
 									
-				
+		when: "Request is sent"
 		MuleMessage result = send requestBuilder.toString()
 		
+		then: "Expect 200 http response status code"
+		result.getInboundProperty('http.status') == 200
 		
-		System.err.println result
-		
-		//then
-		assert result.getInboundProperty('http.status') == 200
-		assert result.getPayloadAsString() =~ newTaskId
+		and: "'newTaskId' returned in the response"
+		result.getPayloadAsString() =~ newTaskId
 	}
+	
+	
+	
 	
 	
 	
@@ -148,8 +146,9 @@ class LogSMSTest extends FunctionalMunitSuite   {
 		.disableStatusCodeValidation()
 		.responseTimeout(10000)
 		.build()
-											
+				
+		
 		return muleContext.getClient().send('http://localhost:8081/api/salesforce/log/sms', request, options)
 	}
 	
-}
+}  

@@ -1,0 +1,399 @@
+<!DOCTYPE html><html>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=utf-8'></meta>
+<style>body {
+  font-family: Helvetica;
+}
+
+table {
+  margin: 5px;
+}
+
+div.date-test-ran {
+  font-size: small;
+  font-style: italic;
+}
+
+table.features-table {
+  width: 800px;
+}
+
+table.summary-table {
+  width: 800px;
+  text-align: left;
+  font-weight: bold;
+  font-size: small;
+}
+
+table.summary-table th {
+  background: lightblue;
+  padding: 6px;
+}
+
+table.summary-table td {
+  background: #E0E0E0;
+  padding: 6px;
+}
+
+pre.narrative {
+  font-family: inherit;
+  font-size: 18px;
+  line-height: 23px;
+  letter-spacing: -1px;
+  color: #444;
+}
+
+.feature-description {
+  font-size: large;
+  background: lightblue;
+  padding: 4px;
+}
+
+.feature-toc-error {
+	color: #F89A4F;
+}
+
+.feature-toc-failure {
+	color: #FF8080;
+}
+
+.feature-toc-ignored {
+	color: lightgray;
+}
+
+.feature-toc-pass {
+	color: green;
+}
+
+.feature-description.error {
+  background: #F89A4F;
+}
+
+.feature-description.failure {
+  background: #FF8080;
+}
+
+.feature-description.ignored {
+  background: lightgray;
+}
+
+.feature-description.ignored .reason {
+  color: black;
+  font-style: italic;
+  font-size: small;
+}
+
+div.issues {
+  color: black;
+  font-weight: bold;
+  font-size: small;
+}
+
+div.problem-description {
+  padding: 10px;
+  background: pink;
+  border-radius: 10px;
+}
+
+div.problem-header {
+  font-weight: bold;
+  color: red;
+}
+
+div.problem-list {
+  
+}
+
+table.ex-table th {
+  background: lightblue;
+  padding: 0px 5px 0px 5px;
+}
+
+table.ex-table td {
+  background: #E0E0E0;
+  padding: 0px 5px 0px 5px;
+}
+
+table td {
+  min-width: 50px;
+}
+
+col.block-kind-col {
+  width: 70px;
+}
+
+span.spec-header {
+  font-weight: bold;
+}
+
+div.spec-text {
+  /*color: green;*/
+}
+
+div.spec-status {
+  font-style: italic;
+}
+
+.ignored {
+  color: gray;
+}
+
+td.ex-result {
+  text-align: center;
+  background: white !important;
+}
+
+.ex-pass {
+  color: darkgreen;
+}
+
+.ex-fail {
+  color: red;
+  font-weight: bold;
+}
+
+div.block-kind {
+  margin: 2px;
+  font-style: italic;
+}
+
+div.block-text {
+
+}
+
+div.footer {
+  text-align: center;
+  font-size: small;
+}
+</style>
+</head>
+<body>
+<h2>Report for io.github.jarent.LogSMSSpec</h2>
+<hr></hr>
+<div class='summary-report'>
+<h3>Summary:</h3>
+<div class='date-test-ran'>Created on Thu Jun 02 13:37:47 CDT 2016 by jacek</div>
+<table class='summary-table'>
+<thead>
+<th>Executed features</th>
+<th>Failures</th>
+<th>Errors</th>
+<th>Skipped</th>
+<th>Success rate</th>
+<th>Time</th>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>75.0%</td>
+<td>12.398 seconds</td>
+</tr>
+</tbody>
+</table>
+</div>
+<pre class='narrative'>Log SMS API Specification
+</pre>
+<h3>Features:</h3>
+<table class='features-table'>
+<colgroup>
+<col class='block-kind-col'></col>
+<col class='block-text-col'></col>
+</colgroup>
+<tbody>
+<ul id='toc'>
+<li>
+<a href='#-2028601390' class='feature-toc-pass'>should Reject Invalid Request</a>
+</li>
+<li>
+<a href='#1909570623' class='feature-toc-pass'>should Fail When Invalid WhoId</a>
+</li>
+<li>
+<a href='#-1707774126' class='feature-toc-pass'>should Fail When Salesforce Fault</a>
+</li>
+<li>
+<a href='#2134020042' class='feature-toc-failure'>should Success For Valid Request</a>
+</li>
+</ul>
+<tr>
+<td colspan='10'>
+<div class='feature-description' id='-2028601390'>
+<span>should Reject Invalid Request</span>
+<span style='float: right; font-size: 60%;'>
+<a href='#toc'>Return</a>
+</span>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>Expect:</div>
+</td>
+<td>
+<div class='block-text'>'400' http.status response code and { "exception" : {"code": "INVALID_REQUEST", "message": "Bad request" }} as a result</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>Where:</div>
+</td>
+<td>
+<div class='block-text'>request is {"phone":"6309999999"}</div>
+</td>
+</tr>
+<tr>
+<td colspan='10'>
+<div class='feature-description' id='1909570623'>
+<span>should Fail When Invalid WhoId</span>
+<span style='float: right; font-size: 60%;'>
+<a href='#toc'>Return</a>
+</span>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>Expect:</div>
+</td>
+<td>
+<div class='block-text'>'500' http.status response code and { "message": "Failed because of Name ID: id value of incorrect type: 00000" } as a result</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>Where:</div>
+</td>
+<td>
+<div class='block-text'>request is 
+			 {"LogSMSRequest" :	
+				{
+				"occuredAt": "October 12, 2015 at 08:05PM", 
+				"whoId": "00000", 
+				"text":"Hello World!"
+				}
+		     }
+			</div>
+</td>
+</tr>
+<tr>
+<td colspan='10'>
+<div class='feature-description' id='-1707774126'>
+<span>should Fail When Salesforce Fault</span>
+<span style='float: right; font-size: 60%;'>
+<a href='#toc'>Return</a>
+</span>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>Given:</div>
+</td>
+<td>
+<div class='block-text'>Exception thrown from Saleforce create call</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>When:</div>
+</td>
+<td>
+<div class='block-text'>Valid request is sent</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>Then:</div>
+</td>
+<td>
+<div class='block-text'>Expect 500 Internal Server Error status code</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>And:</div>
+</td>
+<td>
+<div class='block-text'>Salesforce exception code</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>And:</div>
+</td>
+<td>
+<div class='block-text'>Salesforce exception message returned in the response</div>
+</td>
+</tr>
+<tr>
+<td colspan='10'>
+<div class='feature-description failure' id='2134020042'>
+<span>should Success For Valid Request</span>
+<span style='float: right; font-size: 60%;'>
+<a href='#toc'>Return</a>
+</span>
+</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>Given:</div>
+</td>
+<td>
+<div class='block-text'>'newTaskId' returned from SalesForce create call</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>And:</div>
+</td>
+<td>
+<div class='block-text'>Valid request</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>When:</div>
+</td>
+<td>
+<div class='block-text'>Request is sent</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>Then:</div>
+</td>
+<td>
+<div class='block-text'>Expect 200 http response status code</div>
+</td>
+</tr>
+<tr>
+<td>
+<div class='block-kind'>And:</div>
+</td>
+<td>
+<div class='block-text'>'newTaskId' returned in the response</div>
+</td>
+</tr>
+<tr>
+<td colspan='10'>
+<div class='problem-description'>
+<div class='problem-header'>The following problems occurred:</div>
+<div class='problem-list'>
+<ul>
+<li>
+<pre>Condition not satisfied:<br/><br/>result.getInboundProperty(&apos;http.status&apos;) == 200<br/>|      |                                 |<br/>|      500                               false<br/> <br/>org.mule.DefaultMuleMessage<br/>{<br/>  id=1996a030-28f1-11e6-825b-b68c5b4e6f8d<br/>  payload=org.glassfish.grizzly.utils.BufferInputStream<br/>  correlationId=&lt;not set&gt;<br/>  correlationGroup=-1<br/>  correlationSeq=-1<br/>  encoding=UTF-8<br/>  exceptionPayload=&lt;not set&gt;<br/> <br/>Message properties:<br/>  INVOCATION scoped properties:<br/>  INBOUND scoped properties:<br/>    connection=close<br/>    content-length=38<br/>    date=Thu, 02 Jun 2016 18:37:46 GMT<br/>    http.reason=null (java.lang.NullPointerException).<br/>    http.status=500<br/>    mule_encoding=UTF-8<br/>  OUTBOUND scoped properties:<br/>  SESSION scoped properties:<br/>}<br/></pre>
+</li>
+</ul>
+</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<hr></hr>
+<div class='footer'>Generated by <a href='https://github.com/renatoathaydes/spock-reports'>Athaydes Spock Reports</a></div>
+</body>
+</html>

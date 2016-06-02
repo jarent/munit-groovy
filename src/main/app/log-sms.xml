@@ -15,10 +15,11 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 	
 	<sfdc:config name="Salesforce__Basic_authentication" username="${sf.username}" password="${sf.password}" securityToken="${sf.securityToken}" doc:name="Salesforce: Basic authentication"/>
 
-    <http:listener-config name="log-sms-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
-    <apikit:config name="log-sms-config" raml="log-sms.raml" consoleEnabled="true" consolePath="console" doc:name="Router"/>
+    <http:listener-config name="log-sms-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
+    <apikit:config name="log-sms-config" raml="log-sms.raml" consoleEnabled="true" consolePath="console" doc:name="Router" />
     <flow name="log-sms-main">
         <http:listener config-ref="log-sms-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
+        <logger level="ERROR" message="#[payload]" doc:name="Logger"/>
         <apikit:router config-ref="log-sms-config" doc:name="APIkit Router"/>
         <exception-strategy ref="log-sms-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
     </flow>

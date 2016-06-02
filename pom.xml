@@ -12,11 +12,11 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<mule.version>3.7.0</mule.version>
+		<mule.version>3.8.0</mule.version>
     	<mule.tools.version>1.1</mule.tools.version>
     	
-    	<munit.version>1.1.1</munit.version>
-		<mule.munit.support.version>3.7.0</mule.munit.support.version>
+    	<munit.version>1.2.0</munit.version>
+		<mule.munit.support.version>3.8.0</mule.munit.support.version>
     	
 	</properties>
 
@@ -34,6 +34,8 @@
                             <groupId>org.mule.modules</groupId>
                             <artifactId>mule-module-apikit</artifactId>
                         </inclusion>
+                    
+                    
                     </inclusions>
                 </configuration>
 			</plugin>
@@ -80,14 +82,56 @@
 		        <executions>
 		            <execution>
 		                <goals>
+		                	<goal>addSources</goal>
 		                    <goal>addTestSources</goal>
 		                    <goal>testCompile</goal>
 		                </goals>
 		            </execution>
 		        </executions>
 		    </plugin>
-		</plugins>
-	</build>
+		    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.18.1</version>
+        <configuration>
+            <includes>
+                <include>**/*Test.*</include>
+                <include>**/*Spec.*</include>
+            </includes>
+        </configuration>
+    </plugin>
+		<plugin>
+                <groupId>com.mulesoft.munit.tools</groupId>
+                <artifactId>munit-maven-plugin</artifactId>
+                <version>${munit.version}</version>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <coverage>
+                        <runCoverage>true</runCoverage>
+                        <formats>
+                            <format>html</format>
+                        </formats>
+                    </coverage>
+                </configuration>
+            </plugin>
+        </plugins>
+	<testResources>
+            <testResource>
+                <directory>src/test/munit</directory>
+            </testResource>
+        <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
+    </build>
 
 	<!-- Mule Dependencies -->
 	<dependencies>
@@ -153,7 +197,7 @@
 	<dependency>
             <groupId>org.mule.modules</groupId>
             <artifactId>mule-module-apikit</artifactId>
-            <version>1.7.3</version>
+            <version>${mule.version}</version>
         </dependency>
         <dependency>
 		   <groupId>com.mulesoft.munit</groupId>
@@ -172,7 +216,46 @@
             <artifactId>mule-module-sfdc</artifactId>
             <version>6.2.3</version>
         </dependency>  
-    </dependencies>
+        <!-- Mandatory dependencies for using Spock -->
+    <dependency>
+      <groupId>org.spockframework</groupId>
+      <artifactId>spock-core</artifactId>
+      <version>1.0-groovy-2.4</version>
+      <scope>test</scope>
+      <exclusions>
+      	<exclusion>
+          <groupId>org.codehaus.groovy</groupId>
+          <artifactId>groovy-all</artifactId>
+        </exclusion>
+      </exclusions>	
+    </dependency>
+    <dependency>
+        <groupId>com.athaydes</groupId>
+        <artifactId>spock-reports</artifactId>
+        <version>1.2.7</version>
+        <scope>test</scope>
+        <exclusions>
+      	<exclusion>
+          <groupId>org.codehaus.groovy</groupId>
+          <artifactId>groovy-all</artifactId>
+        </exclusion>
+      </exclusions>	
+    </dependency>
+    
+    
+    <dependency>
+    	<groupId>io.github.jarent</groupId>
+    	<artifactId>spock-munit</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+    	<scope>test</scope>
+    	<exclusions>
+      	<exclusion>
+          <groupId>org.codehaus.groovy</groupId>
+          <artifactId>groovy-all</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+	</dependencies>
 
 	<repositories>
           <repository>
@@ -187,6 +270,13 @@
             <url>http://repository.mulesoft.org/releases/</url>
             <layout>default</layout>
         </repository>
+          <repository>
+        <id>jcenter</id>
+        <name>JCenter Repo</name>
+        <url>http://jcenter.bintray.com</url>
+    </repository>
+        
+        
     </repositories>
     <pluginRepositories>
         <pluginRepository>
